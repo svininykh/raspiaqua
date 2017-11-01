@@ -1,0 +1,17 @@
+package io.hackaday.raspiaqua.proto;
+
+option optimize_for = SPEED;
+
+message Lighting {
+    enum Status {
+        OFF = 0;
+        ON = 1;
+    }
+    message Condition {
+        required Status status = 1;
+        required uint32 duration = 2;
+    }
+    required Condition basic_light = 1;
+    optional Condition front_light = 2;
+    optional Condition bottom_light = 3;
+}
