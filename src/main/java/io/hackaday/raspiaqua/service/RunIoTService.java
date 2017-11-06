@@ -33,7 +33,7 @@ public class RunIoTService {
                     .handler(new LoggingHandler(LogLevel.DEBUG))
                     .childHandler(new ServerInitializer());
             ChannelFuture future = bootstrap.bind(SERVER_PORT).sync();
-            System.out.println("Server Started");
+            System.out.println("IoT Service Server Started");
             future.channel().closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();

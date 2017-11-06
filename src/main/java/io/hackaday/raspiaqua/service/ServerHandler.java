@@ -8,18 +8,19 @@ import io.netty.channel.SimpleChannelInboundHandler;
  *
  * @author svininykh-av
  */
-public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.Lighting> {
+public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequest> {
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Aquarium.Lighting msg)
+    protected void channelRead0(ChannelHandlerContext ctx, Aquarium.AquaRequest msg)
             throws Exception {
-        Aquarium.Lighting.Builder builder = Aquarium.Lighting.newBuilder();
-        if (msg.getBasicLight().getStatus() == Aquarium.Lighting.Status.OFF) {
-            builder.setBasicLight(
-                    Aquarium.Lighting.Condition.newBuilder()
-                            .setStatus(Aquarium.Lighting.Status.ON)
+        Aquarium.AquaResponse.Builder builder = Aquarium.AquaResponse.newBuilder();
+        if (msg.getEquipmentType() == Aquarium.Equipment.LIGHTING) {
+            builder.setLightingLamp(Aquarium.Lighting.newBuilder()
+                    .setBasic(Aquarium.Condition.newBuilder()
+                            .setStatus(Aquarium.Condition.Status.ON)
                             .setDuration(3)
                             .build()
+                    )
             );
         }
         ctx.write(builder.build());

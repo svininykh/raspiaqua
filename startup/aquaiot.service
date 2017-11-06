@@ -1,0 +1,14 @@
+[Unit]
+Description=AquaIoT daemon service
+[Service]
+ExecStart=/usr/bin/java -jar /opt/AquaIoT/raspiaqua.jar
+StandardOutput=syslog
+StandardError=syslog
+# Don't need "sudo" if we run as root.
+User=root
+Group=root
+SyslogIdentifier=AquaIoT
+[Install]
+WantedBy=multi-user.target
+# sudo systemctl enable aquaiot.service
+# sudo systemctl start aquaiot.service

@@ -11,20 +11,16 @@ import java.util.concurrent.LinkedBlockingQueue;
  *
  * @author svininykh-av
  */
-public class LightClientHandler extends SimpleChannelInboundHandler<Aquarium.Lighting> {
+public class LightClientHandler extends SimpleChannelInboundHandler<Aquarium.AquaResponse> {
 
     private Channel channel;
-    private Aquarium.Lighting resp;
-    BlockingQueue<Aquarium.Lighting> resps = new LinkedBlockingQueue<Aquarium.Lighting>();
+    private Aquarium.AquaResponse resp;
+    BlockingQueue<Aquarium.AquaResponse> resps = new LinkedBlockingQueue<Aquarium.AquaResponse>();
 
-    public Aquarium.Lighting sendRequest() {
-        Aquarium.Lighting req = Aquarium.Lighting.newBuilder()
-                .setBasicLight(
-                        Aquarium.Lighting.Condition.newBuilder()
-                                .setStatus(Aquarium.Lighting.Status.OFF)
-                                .setDuration(0)
-                                .build()
-                ).build();
+    public Aquarium.AquaResponse sendRequest() {
+        Aquarium.AquaRequest req = Aquarium.AquaRequest.newBuilder()
+                .setEquipmentType(Aquarium.Equipment.LIGHTING)
+                .build();
 
         // Send request
         channel.writeAndFlush(req);
@@ -53,7 +49,7 @@ public class LightClientHandler extends SimpleChannelInboundHandler<Aquarium.Lig
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Aquarium.Lighting msg)
+    protected void channelRead0(ChannelHandlerContext ctx, Aquarium.AquaResponse msg)
             throws Exception {
         resps.add(msg);
     }

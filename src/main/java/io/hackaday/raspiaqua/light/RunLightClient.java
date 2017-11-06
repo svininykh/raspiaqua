@@ -1,14 +1,15 @@
 package io.hackaday.raspiaqua.light;
 
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.RaspiPin;
 import io.hackaday.raspiaqua.proto.Aquarium;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import java.applet.Applet;
-import java.applet.AudioClip;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -22,7 +23,8 @@ public class RunLightClient {
     public static void main(String[] args) throws InterruptedException {
         EventLoopGroup group = new NioEventLoopGroup();
 
-        AudioClip clip = Applet.newAudioClip(RunLightClient.class.getResource("/sound/Steel-Bell-C6.wav"));
+        GpioController gpio = GpioFactory.getInstance();
+        GpioPinDigitalOutput led1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01);
 
         try {
             Bootstrap bootstrap = new Bootstrap();
@@ -35,13 +37,13 @@ public class RunLightClient {
 
             // Get handle to handler so we can send message
             LightClientHandler handle = c.pipeline().get(LightClientHandler.class);
-            Aquarium.Lighting resp = handle.sendRequest();
-            if (resp.getBasicLight().getStatus() == Aquarium.Lighting.Status.ON) {
-                for (int i = 0; i < resp.getBasicLight().getDuration(); i++) {
-                    clip.play();
-                    TimeUnit.SECONDS.sleep(1);
-                }
+            Aquarium.AquaResponse resp = handle.sendRequest();
+            if (resp.hasLightingLamp() &&
+                    resp.getLightingLamp().getBasic().getStatus() == Aquarium.Condition.Status.ON) {
+                led1.high();
+                Thread.sleep(resp.getLightingLamp().getBasic().getDuration() * 60000);
             }
+            led1.low();            
             c.close();
 
         } finally {
