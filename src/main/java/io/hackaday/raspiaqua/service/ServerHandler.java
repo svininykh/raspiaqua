@@ -4,6 +4,8 @@ import io.hackaday.raspiaqua.proto.Aquarium;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import java.util.Date;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -14,9 +16,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Aquarium.AquaRequest msg)
             throws Exception {
+        Logger logger = LoggerFactory.getLogger(ServerHandler.class);
         DetermineSunriseSunset dss = new DetermineSunriseSunset(new Date());
         Aquarium.AquaResponse.Builder builder = Aquarium.AquaResponse.newBuilder();
+        logger.info("AquaRequest read");
         if (msg.getEquipmentType() == Aquarium.Equipment.LIGHTING) {
+            logger.info("EquipmentType: LIGHTING");
             builder.setLightingLamp(Aquarium.Lighting.newBuilder()
                     .setBasic(Aquarium.Condition.newBuilder()
                             .setStatus(dss.getNightDurationMinutes() > 0 ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF)
@@ -26,6 +31,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
             );
         }
         ctx.write(builder.build());
+        logger.info("AquaResponse write");
     }
 
     @Override

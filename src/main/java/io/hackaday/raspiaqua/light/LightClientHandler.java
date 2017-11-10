@@ -15,7 +15,7 @@ public class LightClientHandler extends SimpleChannelInboundHandler<Aquarium.Aqu
 
     private Channel channel;
     private Aquarium.AquaResponse resp;
-    BlockingQueue<Aquarium.AquaResponse> resps = new LinkedBlockingQueue<Aquarium.AquaResponse>();
+    BlockingQueue<Aquarium.AquaResponse> resps = new LinkedBlockingQueue<>();
 
     public Aquarium.AquaResponse sendRequest() {
         Aquarium.AquaRequest req = Aquarium.AquaRequest.newBuilder()

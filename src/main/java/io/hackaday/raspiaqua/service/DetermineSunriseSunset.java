@@ -4,14 +4,11 @@ import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
 import com.luckycatlabs.sunrisesunset.dto.Location;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -27,7 +24,7 @@ public class DetermineSunriseSunset {
 
     public DetermineSunriseSunset(Date date) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        prop.load(loader.getResourceAsStream("config.properties"));
+        prop.load(loader.getResourceAsStream("raspiaquaconfig.properties"));
         today = Calendar.getInstance(
                 TimeZone.getTimeZone(prop.getProperty("place.timezone", "Europe/London")),
                 Locale.getDefault()

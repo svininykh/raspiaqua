@@ -20,7 +20,7 @@ public class LightClientInitializer extends ChannelInitializer<SocketChannel> {
         ChannelPipeline p = ch.pipeline();
 
         p.addLast(new ProtobufVarint32FrameDecoder());
-        p.addLast(new ProtobufDecoder(Aquarium.Lighting.getDefaultInstance()));
+        p.addLast(new ProtobufDecoder(Aquarium.AquaResponse.getDefaultInstance()));
 
         p.addLast(new ProtobufVarint32LengthFieldPrepender());
         p.addLast(new ProtobufEncoder());
