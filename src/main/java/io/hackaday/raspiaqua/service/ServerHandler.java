@@ -4,6 +4,7 @@ import io.hackaday.raspiaqua.proto.Aquarium;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import java.util.Date;
+import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,22 +14,37 @@ import org.slf4j.LoggerFactory;
  */
 public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequest> {
 
+    Properties prop = new Properties();
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Aquarium.AquaRequest msg)
             throws Exception {
         Logger logger = LoggerFactory.getLogger(ServerHandler.class);
-        DetermineSunriseSunset dss = new DetermineSunriseSunset(new Date());
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        prop.load(loader.getResourceAsStream("raspiaquaconfig.properties"));
+        DetermineSunriseSunset dss = new DetermineSunriseSunset(new Date(), prop);
         Aquarium.AquaResponse.Builder builder = Aquarium.AquaResponse.newBuilder();
         logger.info("AquaRequest read");
         if (msg.getEquipmentType() == Aquarium.Equipment.LIGHTING) {
             logger.info("EquipmentType: LIGHTING");
-            builder.setLightingLamp(Aquarium.Lighting.newBuilder()
-                    .setBasic(Aquarium.Condition.newBuilder()
-                            .setStatus(dss.getNightDurationMinutes() > 0 ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF)
-                            .setDuration(dss.getNightDurationMinutes() > 0 ? (int) dss.getNightDurationMinutes() : (int) dss.getDayDurationMinutes())
-                            .build()
-                    )
-            );
+            if (dss.getDayDurationMinutes() > 0) {
+                builder.setLightingLamp(Aquarium.Lighting.newBuilder()
+                        .setBasic(Aquarium.Condition.newBuilder()
+                                .setStatus(prop.getProperty("light.day", "off").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF)
+                                .setDuration((int) dss.getDayDurationMinutes())
+                                .build()
+                        )
+                );
+            }
+            if (dss.getNightDurationMinutes() > 0) {
+                builder.setLightingLamp(Aquarium.Lighting.newBuilder()
+                        .setBasic(Aquarium.Condition.newBuilder()
+                                .setStatus(prop.getProperty("light.night", "off").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF)
+                                .setDuration((int) dss.getNightDurationMinutes())
+                                .build()
+                        )
+                );
+            }
         }
         ctx.write(builder.build());
         logger.info("AquaResponse write");

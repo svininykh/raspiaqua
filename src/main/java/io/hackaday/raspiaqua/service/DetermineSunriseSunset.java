@@ -16,15 +16,12 @@ import java.util.TimeZone;
  */
 public class DetermineSunriseSunset {
 
-    Properties prop = new Properties();
     Calendar today = Calendar.getInstance();
     Calendar sunrise = Calendar.getInstance();
     Calendar sunset = Calendar.getInstance();
     SunriseSunsetCalculator calculator;
 
-    public DetermineSunriseSunset(Date date) throws IOException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        prop.load(loader.getResourceAsStream("raspiaquaconfig.properties"));
+    public DetermineSunriseSunset(Date date, Properties prop) {
         today = Calendar.getInstance(
                 TimeZone.getTimeZone(prop.getProperty("place.timezone", "Europe/London")),
                 Locale.getDefault()
