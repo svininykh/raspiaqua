@@ -27,24 +27,23 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
         logger.info("AquaRequest read");
         if (msg.getEquipmentType() == Aquarium.Equipment.LIGHTING) {
             logger.info("EquipmentType: LIGHTING");
-            if (dss.getDayDurationMinutes() > 0) {
-                builder.setLightingLamp(Aquarium.Lighting.newBuilder()
-                        .setBasic(Aquarium.Condition.newBuilder()
-                                .setStatus(prop.getProperty("light.day", "off").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF)
-                                .setDuration((int) dss.getDayDurationMinutes())
-                                .build()
-                        )
-                );
+            Aquarium.Condition.Status lightStatus = Aquarium.Condition.Status.OFF;
+            long lightDurationMinutes = 0;
+            if (dss.isDayNow()) {
+                lightStatus = prop.getProperty("light.day", "off").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF;
+                lightDurationMinutes = dss.getDayDurationMinutes();
             }
-            if (dss.getNightDurationMinutes() > 0) {
-                builder.setLightingLamp(Aquarium.Lighting.newBuilder()
-                        .setBasic(Aquarium.Condition.newBuilder()
-                                .setStatus(prop.getProperty("light.night", "off").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF)
-                                .setDuration((int) dss.getNightDurationMinutes())
-                                .build()
-                        )
-                );
+            if (!dss.isDayNow()) {
+                lightStatus = prop.getProperty("light.night", "on").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF;
+                lightDurationMinutes = dss.getNightDurationMinutes();
             }
+            builder.setLightingLamp(Aquarium.Lighting.newBuilder()
+                    .setBasic(Aquarium.Condition.newBuilder()
+                            .setStatus(lightStatus)
+                            .setDuration((int) lightDurationMinutes)
+                            .build()
+                    )
+            );
         }
         ctx.write(builder.build());
         logger.info("AquaResponse write");
