@@ -24,7 +24,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
         prop.load(loader.getResourceAsStream("raspiaquaconfig.properties"));
         DetermineSunriseSunset dss = new DetermineSunriseSunset(new Date(), prop);
         Aquarium.AquaResponse.Builder builder = Aquarium.AquaResponse.newBuilder();
-        logger.info("AquaRequest read");
+        logger.debug("AquaRequest read");
         if (msg.getEquipmentType() == Aquarium.Equipment.LIGHTING) {
             logger.info("EquipmentType: LIGHTING");
             Aquarium.Condition.Status lightStatus = Aquarium.Condition.Status.OFF;
@@ -73,7 +73,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
             );
         }
         ctx.write(builder.build());
-        logger.info("AquaResponse write");
+        logger.debug("AquaResponse write");
     }
 
     @Override

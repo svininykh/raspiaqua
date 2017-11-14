@@ -12,7 +12,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,9 +50,9 @@ public class RunLightClient {
                     Channel c = bootstrap.connect(sHost, iPort).sync().channel();
                     LightClientHandler handle = c.pipeline().get(LightClientHandler.class);
                     // Get handle to handler so we can send message
-                    logger.info("AquaRequest send to the IoT server");
+                    logger.debug("AquaRequest send to the IoT server");
                     Aquarium.AquaResponse resp = handle.sendRequest();
-                    logger.info("AquaResponse receive from the IoT server");
+                    logger.debug("AquaResponse receive from the IoT server");
                     if (resp.hasLightingLamp()) {
                         if (resp.getLightingLamp().getBasic().getStatus() == Aquarium.Condition.Status.ON) {
                             logger.info("LightingLamp: ON, Duration: {}", resp.getLightingLamp().getBasic().getDuration());
@@ -64,6 +63,7 @@ public class RunLightClient {
                         }
                         c.close();
                         try {
+                            Thread.sleep(WAIT_MINUTE);
                             Thread.sleep(resp.getLightingLamp().getBasic().getDuration() * WAIT_MINUTE);
                         } catch (InterruptedException ex) {
                             logger.error(ex.toString());
