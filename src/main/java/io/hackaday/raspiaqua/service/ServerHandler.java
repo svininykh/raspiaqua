@@ -32,7 +32,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
             long lightBeforeSunrise = Long.parseLong(prop.getProperty("light.beforesunrise", "0"));
             long lightAfterSunrise = Long.parseLong(prop.getProperty("light.aftersunrise", "0"));
             long lightBeforeSunset = Long.parseLong(prop.getProperty("light.beforesunset", "0"));
-            long lightAfterSuset = Long.parseLong(prop.getProperty("light.aftersunset", "0"));
+            long lightAfterSunset = Long.parseLong(prop.getProperty("light.aftersunset", "0"));
             if (dss.isDayNow()) {
                 lightStatus = prop.getProperty("light.day", "off").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF;
                 if (lightStatus == Aquarium.Condition.Status.ON) {
@@ -40,7 +40,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
                 } else {
                     if(lightAfterSunrise > 0 && lightAfterSunrise > dss.getAfterSunriseMinutes()) {
                         lightStatus = Aquarium.Condition.Status.ON;
-                        lightDurationMinutes = dss.getAfterSunriseMinutes();
+                        lightDurationMinutes = lightAfterSunrise - dss.getAfterSunriseMinutes();
                     } else if(lightBeforeSunset > 0 && lightBeforeSunset > dss.getDayDurationMinutes()) {
                         lightStatus = Aquarium.Condition.Status.ON;
                         lightDurationMinutes = dss.getDayDurationMinutes();
@@ -53,9 +53,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
                 if (lightStatus == Aquarium.Condition.Status.ON) {
                     lightDurationMinutes = dss.getNightDurationMinutes();
                 } else {
-                    if(lightAfterSuset > 0 && lightAfterSuset > dss.getAfterSunsetMinutes()) {
+                    if(lightAfterSunset > 0 && lightAfterSunset > dss.getAfterSunsetMinutes()) {
                         lightStatus = Aquarium.Condition.Status.ON;
-                        lightDurationMinutes = dss.getAfterSunsetMinutes();
+                        lightDurationMinutes = lightAfterSunset - dss.getAfterSunsetMinutes();
                     } else if (lightBeforeSunrise > 0 && lightBeforeSunrise > dss.getNightDurationMinutes()) {
                         lightStatus = Aquarium.Condition.Status.ON;
                         lightDurationMinutes = dss.getNightDurationMinutes();
