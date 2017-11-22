@@ -1,5 +1,6 @@
 package io.hackaday.raspiaqua.service;
 
+import io.hackaday.raspiaqua.light.Light;
 import io.hackaday.raspiaqua.proto.Aquarium;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -24,53 +25,30 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
         prop.load(loader.getResourceAsStream("raspiaquaconfig.properties"));
         DetermineSunriseSunset dss = new DetermineSunriseSunset(new Date(), prop);
         Aquarium.AquaResponse.Builder builder = Aquarium.AquaResponse.newBuilder();
+        Timer timer = new Timer(dss);
         logger.debug("AquaRequest read");
-        if (msg.getEquipmentType() == Aquarium.Equipment.LIGHTING) {
-            logger.info("EquipmentType: LIGHTING");
-            Aquarium.Condition.Status lightStatus = Aquarium.Condition.Status.OFF;
-            long lightDurationMinutes = 0;
-            long lightBeforeSunrise = Long.parseLong(prop.getProperty("light.beforesunrise", "0"));
-            long lightAfterSunrise = Long.parseLong(prop.getProperty("light.aftersunrise", "0"));
-            long lightBeforeSunset = Long.parseLong(prop.getProperty("light.beforesunset", "0"));
-            long lightAfterSunset = Long.parseLong(prop.getProperty("light.aftersunset", "0"));
-            if (dss.isDayNow()) {
-                lightStatus = prop.getProperty("light.day", "off").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF;
-                if (lightStatus == Aquarium.Condition.Status.ON) {
-                    lightDurationMinutes = dss.getDayDurationMinutes();
-                } else {
-                    if(lightAfterSunrise > 0 && lightAfterSunrise > dss.getAfterSunriseMinutes()) {
-                        lightStatus = Aquarium.Condition.Status.ON;
-                        lightDurationMinutes = lightAfterSunrise - dss.getAfterSunriseMinutes();
-                    } else if(lightBeforeSunset > 0 && lightBeforeSunset > dss.getDayDurationMinutes()) {
-                        lightStatus = Aquarium.Condition.Status.ON;
-                        lightDurationMinutes = dss.getDayDurationMinutes();
-                    } else {
-                        lightDurationMinutes = dss.getDayDurationMinutes() - lightBeforeSunset;
-                    }
-                }
-            } else {
-                lightStatus = prop.getProperty("light.night", "on").equalsIgnoreCase("on") ? Aquarium.Condition.Status.ON : Aquarium.Condition.Status.OFF;
-                if (lightStatus == Aquarium.Condition.Status.ON) {
-                    lightDurationMinutes = dss.getNightDurationMinutes();
-                } else {
-                    if(lightAfterSunset > 0 && lightAfterSunset > dss.getAfterSunsetMinutes()) {
-                        lightStatus = Aquarium.Condition.Status.ON;
-                        lightDurationMinutes = lightAfterSunset - dss.getAfterSunsetMinutes();
-                    } else if (lightBeforeSunrise > 0 && lightBeforeSunrise > dss.getNightDurationMinutes()) {
-                        lightStatus = Aquarium.Condition.Status.ON;
-                        lightDurationMinutes = dss.getNightDurationMinutes();
-                    } else {
-                        lightDurationMinutes = dss.getNightDurationMinutes() - lightBeforeSunrise;
-                    }
-                }
-            }
-            builder.setLightingLamp(Aquarium.Lighting.newBuilder()
-                    .setBasic(Aquarium.Condition.newBuilder()
-                            .setStatus(lightStatus)
-                            .setDuration((int) lightDurationMinutes)
-                            .build()
-                    )
-            );
+        switch (msg.getEquipmentType()) {
+            case LIGHTING:
+                logger.info("EquipmentType: LIGHTING");
+                timer.setMode(prop.getProperty("light.day", "off"));
+                Light light = new Light();
+                light.setBeforeSunriseMinutes(Long.parseLong(prop.getProperty("light.beforesunrise", "0")));
+                light.setAfterSunriseMinutes(Long.parseLong(prop.getProperty("light.aftersunrise", "0")));
+                light.setBeforeSunsetMinutes(Long.parseLong(prop.getProperty("light.beforesunset", "0")));
+                light.setBeforeSunsetMinutes(Long.parseLong(prop.getProperty("light.aftersunset", "0")));
+                timer.setLightCondition(light);
+                builder.setLightingLamp(Aquarium.Lighting.newBuilder()
+                        .setBasic(timer.getLightCondition())
+                );
+                break;
+            case AERATION:
+                logger.info("EquipmentType: AERATION");
+                /*
+                 TODO: Aeration algorithm.
+                 */
+                break;
+            default:
+                break;
         }
         ctx.write(builder.build());
         logger.debug("AquaResponse write");
