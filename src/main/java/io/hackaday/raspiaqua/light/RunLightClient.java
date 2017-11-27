@@ -56,9 +56,7 @@ public class RunLightClient {
                     if (resp.hasLightingLamp()) {
                         if (resp.getLightingLamp().getBasic().getStatus() == Aquarium.Condition.Status.ON) {
                             logger.info("LightingLamp: ON, Duration: {}", resp.getLightingLamp().getBasic().getDuration());
-                            /*
                             led1.high();
-                             */
                         } else {
                             logger.info("LightingLamp: OFF, Duration: {}", resp.getLightingLamp().getBasic().getDuration());
                             led1.low();

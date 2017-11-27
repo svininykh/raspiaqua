@@ -9,41 +9,26 @@ import io.hackaday.raspiaqua.proto.Aquarium;
  */
 public class Timer {
 
-    enum TimerMode {
+    public enum TimerMode {
         ON,
         AUTO,
         OFF
     }
 
     DetermineSunriseSunset dss;
-    TimerMode mode = TimerMode.OFF;
     Aquarium.Condition lightCondition = Aquarium.Condition.getDefaultInstance();
 
     public Timer(DetermineSunriseSunset dss) {
         this.dss = dss;
     }
-
-    public void setMode(String property) {
-        switch (property) {
-            case "on":
-                this.mode = TimerMode.ON;
-                break;
-            case "auto":
-                this.mode = TimerMode.AUTO;
-                break;
-            default:
-                this.mode = TimerMode.OFF;
-                break;
-        }
-    }
-
+    
     public Aquarium.Condition getLightCondition() {
         return lightCondition;
     }
 
     public void setLightCondition(Light light) {
         if (dss.isDayNow()) {
-            switch (mode) {
+            switch (light.getDayMode()) {
                 case ON:
                     lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
                             .setStatus(Aquarium.Condition.Status.ON)
@@ -76,7 +61,7 @@ public class Timer {
                     break;
             }
         } else {
-            switch (mode) {
+            switch (light.getNightMode()) {
                 case ON:
                     lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
                             .setStatus(Aquarium.Condition.Status.ON)

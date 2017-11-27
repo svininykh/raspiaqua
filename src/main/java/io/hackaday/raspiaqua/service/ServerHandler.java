@@ -30,8 +30,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.AquaRequ
         switch (msg.getEquipmentType()) {
             case LIGHTING:
                 logger.info("EquipmentType: LIGHTING");
-                timer.setMode(prop.getProperty("light.day", "off"));
                 Light light = new Light();
+                light.setDayMode(prop.getProperty("light.day", "off"));
+                light.setNightMode(prop.getProperty("light.night", "on"));                
                 light.setBeforeSunriseMinutes(Long.parseLong(prop.getProperty("light.beforesunrise", "0")));
                 light.setAfterSunriseMinutes(Long.parseLong(prop.getProperty("light.aftersunrise", "0")));
                 light.setBeforeSunsetMinutes(Long.parseLong(prop.getProperty("light.beforesunset", "0")));
