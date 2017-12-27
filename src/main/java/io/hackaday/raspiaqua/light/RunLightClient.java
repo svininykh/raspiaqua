@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Properties;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +39,8 @@ public class RunLightClient {
         } catch (IOException ex) {
             logger.error(ex.toString());
         }
-        String sHost = prop.getProperty("host", "127.0.0.1");
-        int iPort = Integer.parseInt(prop.getProperty("port", "8997"));
+        String sHost = prop.getProperty("server.ip", "127.0.0.1");
+        int iPort = Integer.parseInt(prop.getProperty("server.port", "8997"));
 
         GpioController gpio = GpioFactory.getInstance();
         GpioPinDigitalOutput led1 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01);
@@ -72,7 +71,7 @@ public class RunLightClient {
 
                             if (condition.getStatus() == Condition.Status.ON) {
                                 logger.info("LightingLamp: ON, Duration: {}", condition.getDuration());
-                                led1.high();
+//                                led1.high();
                             } else {
                                 logger.info("LightingLamp: OFF, Duration: {}", condition.getDuration());
                                 led1.low();

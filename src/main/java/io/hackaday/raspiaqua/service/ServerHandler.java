@@ -29,7 +29,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.MessageP
         Aquarium.MessagePacket.Builder builder = Aquarium.MessagePacket.newBuilder();
         Timer timer = new Timer(dss);
         logger.debug("AquaRequest read");
-        logger.debug("Server: %s Client: %s", msg.getServerName(), msg.getClientName());
+        logger.debug("Server: {} Client: {}", msg.getServerName(), msg.getClientName());
         Light light = new Light();
         light.setDayMode(prop.getProperty("light.day", "off"));
         light.setNightMode(prop.getProperty("light.night", "on"));
@@ -38,9 +38,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<Aquarium.MessageP
         light.setBeforeSunsetMinutes(Long.parseLong(prop.getProperty("light.beforesunset", "0")));
         light.setBeforeSunsetMinutes(Long.parseLong(prop.getProperty("light.aftersunset", "0")));
         timer.setLightCondition(light);
-        Aquarium.AquaDevice device = Aquarium.AquaDevice.newBuilder()
+        Aquarium.AquaDevice lightDevice = Aquarium.AquaDevice.newBuilder()
+                .setEquipmentType(Equipment.LIGHT)
                 .setCondition(timer.getLightCondition()).build();
-        builder.addDevices(device);
+        builder.setServerName(msg.getServerName());
+        builder.setClientName(msg.getClientName());                
+        builder.addDevices(lightDevice);
         ctx.write(builder.build());
         logger.debug("AquaResponse write");
     }

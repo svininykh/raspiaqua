@@ -83,48 +83,6 @@ public class Timer {
         return aerateCondition;
     }
 
-    public void setAerateCondition(Aerate aerate) {
-        if (dss.isDayNow()) {
-            switch (aerate.getDayMode()) {
-                case ON:
-                    aerateCondition = getAquariumCondition(Status.ON,
-                            dss.getDayDurationMinutes());
-                    break;
-                case AUTO:
-                    if (dss.getDayDurationMinutes() > aerate.getDayFrequenceOn()) {
-                        aerateCondition = getAquariumCondition(Status.ON,
-                                dss.getDayDurationMinutes() - aerate.getDayFrequenceOn());
-                    } else {
-                        aerateCondition = getAquariumCondition(Status.ON,
-                                dss.getDayDurationMinutes());
-                    }
-                default:
-                    aerateCondition = getAquariumCondition(Status.OFF,
-                            dss.getDayDurationMinutes());
-                    break;
-            }
-        } else {
-            switch (aerate.getNightMode()) {
-                case ON:
-                    aerateCondition = getAquariumCondition(Status.ON,
-                            dss.getNightDurationMinutes());
-                    break;
-                case AUTO:
-                    if (dss.getDayDurationMinutes() > aerate.getDayFrequenceOn()) {
-                        aerateCondition = getAquariumCondition(Status.ON,
-                                dss.getDayDurationMinutes() - aerate.getDayFrequenceOn());
-                    } else {
-                        aerateCondition = getAquariumCondition(Status.ON,
-                                dss.getDayDurationMinutes());
-                    }
-                default:
-                    aerateCondition = getAquariumCondition(Status.OFF,
-                            dss.getNightDurationMinutes());
-                    break;
-            }
-        }
-    }
-
     private Condition getAquariumCondition(Status status, long duration) {
         return Condition.getDefaultInstance().toBuilder()
                 .setStatus(status)
