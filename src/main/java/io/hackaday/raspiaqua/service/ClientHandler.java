@@ -1,9 +1,11 @@
-package io.hackaday.raspiaqua.light;
+package io.hackaday.raspiaqua.service;
 
 import io.hackaday.raspiaqua.proto.Aquarium;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -11,15 +13,16 @@ import java.util.concurrent.LinkedBlockingQueue;
  *
  * @author svininykh-av
  */
-public class LightClientHandler extends SimpleChannelInboundHandler<Aquarium.AquaResponse> {
+public class ClientHandler extends SimpleChannelInboundHandler<Aquarium.MessagePacket> {
 
     private Channel channel;
-    private Aquarium.AquaResponse resp;
-    BlockingQueue<Aquarium.AquaResponse> resps = new LinkedBlockingQueue<>();
+    private Aquarium.MessagePacket resp;
+    BlockingQueue<Aquarium.MessagePacket> resps = new LinkedBlockingQueue<>();
 
-    public Aquarium.AquaResponse sendRequest() {
-        Aquarium.AquaRequest req = Aquarium.AquaRequest.newBuilder()
-                .setEquipmentType(Aquarium.Equipment.LIGHTING)
+    public Aquarium.MessagePacket sendRequest(String server, String client) {
+        Aquarium.MessagePacket req = Aquarium.MessagePacket.newBuilder()
+                .setServerName(server)
+                .setClientName(client)                
                 .build();
 
         // Send request
@@ -49,7 +52,7 @@ public class LightClientHandler extends SimpleChannelInboundHandler<Aquarium.Aqu
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Aquarium.AquaResponse msg)
+    protected void channelRead0(ChannelHandlerContext ctx, Aquarium.MessagePacket msg)
             throws Exception {
         resps.add(msg);
     }

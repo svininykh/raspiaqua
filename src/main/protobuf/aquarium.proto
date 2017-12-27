@@ -2,33 +2,28 @@ package io.hackaday.raspiaqua.proto;
 
 option optimize_for = SPEED;
 
-message AquaRequest {
-    required Equipment equipment_type = 1;
+message MessagePacket {
+    required string server_name = 1;
+    required string client_name = 2;
+    repeated AquaDevice devices = 3;
 }
 
-message AquaResponse {
-    optional Aeration aeration_compressor = 1;
-    optional Lighting lighting_lamp = 2;
-}
-
-enum Equipment {
-    AERATION = 1;
-    LIGHTING = 2;
-}
-
-message Condition {
-    enum Status {
-        OFF = 0;
-        ON = 1;
+message AquaDevice {
+    enum Equipment {
+        LIGHT = 1;
+        COMPRESSOR = 2;
+        HEATER = 3;
+        FILTER = 4;
     }
-    required Status status = 1;
-    required uint32 duration = 2;
-}
+    message Condition {
+        enum Status {
+            OFF = 0;
+            ON = 1;
+        }
+        required Status status = 1;
+        optional uint32 duration = 2;
+    }
 
-message Lighting {
-    required Condition basic = 1;
-}
-
-message Aeration {
-    required Condition basic = 1;
+    required Equipment equipment_type = 1;
+    required Condition condition = 2;
 }

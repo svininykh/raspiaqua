@@ -1,7 +1,9 @@
 package io.hackaday.raspiaqua.service;
 
+import io.hackaday.raspiaqua.aeration.Aerate;
 import io.hackaday.raspiaqua.light.Light;
-import io.hackaday.raspiaqua.proto.Aquarium;
+import io.hackaday.raspiaqua.proto.Aquarium.AquaDevice.Condition;
+import io.hackaday.raspiaqua.proto.Aquarium.AquaDevice.Condition.Status;
 
 /**
  *
@@ -16,13 +18,14 @@ public class Timer {
     }
 
     DetermineSunriseSunset dss;
-    Aquarium.Condition lightCondition = Aquarium.Condition.getDefaultInstance();
+    Condition lightCondition = Condition.getDefaultInstance();
+    Condition aerateCondition = Condition.getDefaultInstance();
 
     public Timer(DetermineSunriseSunset dss) {
         this.dss = dss;
     }
-    
-    public Aquarium.Condition getLightCondition() {
+
+    public Condition getLightCondition() {
         return lightCondition;
     }
 
@@ -30,69 +33,102 @@ public class Timer {
         if (dss.isDayNow()) {
             switch (light.getDayMode()) {
                 case ON:
-                    lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                            .setStatus(Aquarium.Condition.Status.ON)
-                            .setDuration((int) dss.getDayDurationMinutes())
-                            .build();
+                    lightCondition = getAquariumCondition(Status.ON,
+                            dss.getDayDurationMinutes());
                     break;
                 case AUTO:
                     if (light.getAfterSunriseMinutes() > 0 && light.getAfterSunriseMinutes() > dss.getAfterSunriseMinutes()) {
-                        lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                                .setStatus(Aquarium.Condition.Status.ON)
-                                .setDuration((int) (light.getAfterSunriseMinutes() - dss.getAfterSunriseMinutes()))
-                                .build();
+                        lightCondition = getAquariumCondition(Status.ON,
+                                light.getAfterSunriseMinutes() - dss.getAfterSunriseMinutes());
                     } else if (light.getBeforeSunsetMinutes() > 0 && light.getBeforeSunsetMinutes() > dss.getDayDurationMinutes()) {
-                        lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                                .setStatus(Aquarium.Condition.Status.ON)
-                                .setDuration((int) dss.getDayDurationMinutes())
-                                .build();
+                        lightCondition = getAquariumCondition(Status.ON,
+                                dss.getDayDurationMinutes());
                     } else {
-                        lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                                .setStatus(Aquarium.Condition.Status.OFF)
-                                .setDuration((int) (dss.getDayDurationMinutes() - light.getBeforeSunsetMinutes()))
-                                .build();
+                        lightCondition = getAquariumCondition(Status.OFF,
+                                dss.getDayDurationMinutes() - light.getBeforeSunsetMinutes());
                     }
                     break;
                 default:
-                    lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                            .setStatus(Aquarium.Condition.Status.OFF)
-                            .setDuration((int) dss.getDayDurationMinutes())
-                            .build();
+                    lightCondition = getAquariumCondition(Status.OFF,
+                            dss.getDayDurationMinutes());
                     break;
             }
         } else {
             switch (light.getNightMode()) {
                 case ON:
-                    lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                            .setStatus(Aquarium.Condition.Status.ON)
-                            .setDuration((int) dss.getNightDurationMinutes())
-                            .build();
+                    lightCondition = getAquariumCondition(Status.ON,
+                            dss.getNightDurationMinutes());
                     break;
                 case AUTO:
                     if (light.getAfterSunsetMinutes() > 0 && light.getAfterSunsetMinutes() > dss.getAfterSunsetMinutes()) {
-                        lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                                .setStatus(Aquarium.Condition.Status.ON)
-                                .setDuration((int) (light.getAfterSunsetMinutes() - dss.getAfterSunsetMinutes()))
-                                .build();
+                        lightCondition = getAquariumCondition(Status.ON,
+                                light.getAfterSunsetMinutes() - dss.getAfterSunsetMinutes());
                     } else if (light.getBeforeSunriseMinutes() > 0 && light.getBeforeSunriseMinutes() > dss.getNightDurationMinutes()) {
-                        lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                                .setStatus(Aquarium.Condition.Status.ON)
-                                .setDuration((int) dss.getNightDurationMinutes())
-                                .build();
+                        lightCondition = getAquariumCondition(Status.ON,
+                                dss.getNightDurationMinutes());
                     } else {
-                        lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                                .setStatus(Aquarium.Condition.Status.OFF)
-                                .setDuration((int) (dss.getNightDurationMinutes() - light.getBeforeSunriseMinutes()))
-                                .build();
+                        lightCondition = getAquariumCondition(Status.OFF,
+                                dss.getNightDurationMinutes() - light.getBeforeSunriseMinutes());
                     }
                     break;
                 default:
-                    lightCondition = Aquarium.Condition.getDefaultInstance().toBuilder()
-                            .setStatus(Aquarium.Condition.Status.OFF)
-                            .setDuration((int) dss.getNightDurationMinutes())
-                            .build();
+                    lightCondition = getAquariumCondition(Status.OFF,
+                            dss.getNightDurationMinutes());
                     break;
             }
         }
+    }
+
+    public Condition getAerateCondition() {
+        return aerateCondition;
+    }
+
+    public void setAerateCondition(Aerate aerate) {
+        if (dss.isDayNow()) {
+            switch (aerate.getDayMode()) {
+                case ON:
+                    aerateCondition = getAquariumCondition(Status.ON,
+                            dss.getDayDurationMinutes());
+                    break;
+                case AUTO:
+                    if (dss.getDayDurationMinutes() > aerate.getDayFrequenceOn()) {
+                        aerateCondition = getAquariumCondition(Status.ON,
+                                dss.getDayDurationMinutes() - aerate.getDayFrequenceOn());
+                    } else {
+                        aerateCondition = getAquariumCondition(Status.ON,
+                                dss.getDayDurationMinutes());
+                    }
+                default:
+                    aerateCondition = getAquariumCondition(Status.OFF,
+                            dss.getDayDurationMinutes());
+                    break;
+            }
+        } else {
+            switch (aerate.getNightMode()) {
+                case ON:
+                    aerateCondition = getAquariumCondition(Status.ON,
+                            dss.getNightDurationMinutes());
+                    break;
+                case AUTO:
+                    if (dss.getDayDurationMinutes() > aerate.getDayFrequenceOn()) {
+                        aerateCondition = getAquariumCondition(Status.ON,
+                                dss.getDayDurationMinutes() - aerate.getDayFrequenceOn());
+                    } else {
+                        aerateCondition = getAquariumCondition(Status.ON,
+                                dss.getDayDurationMinutes());
+                    }
+                default:
+                    aerateCondition = getAquariumCondition(Status.OFF,
+                            dss.getNightDurationMinutes());
+                    break;
+            }
+        }
+    }
+
+    private Condition getAquariumCondition(Status status, long duration) {
+        return Condition.getDefaultInstance().toBuilder()
+                .setStatus(status)
+                .setDuration((int) duration)
+                .build();
     }
 }

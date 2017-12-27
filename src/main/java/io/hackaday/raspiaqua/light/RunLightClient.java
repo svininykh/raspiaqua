@@ -1,17 +1,24 @@
 package io.hackaday.raspiaqua.light;
 
+import io.hackaday.raspiaqua.service.ClientInitializer;
+import io.hackaday.raspiaqua.service.ClientHandler;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.RaspiPin;
 import io.hackaday.raspiaqua.proto.Aquarium;
+import io.hackaday.raspiaqua.proto.Aquarium.AquaDevice.Condition;
+import io.hackaday.raspiaqua.proto.Aquarium.AquaDevice.Equipment;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,31 +49,46 @@ public class RunLightClient {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(group)
                     .channel(NioSocketChannel.class)
-                    .handler(new LightClientInitializer());
+                    .handler(new ClientInitializer());
 
             for (;;) {
                 try {
                     // Create connection 
                     Channel c = bootstrap.connect(sHost, iPort).sync().channel();
-                    LightClientHandler handle = c.pipeline().get(LightClientHandler.class);
+                    ClientHandler handle = c.pipeline().get(ClientHandler.class);
                     // Get handle to handler so we can send message
                     logger.debug("AquaRequest send to the IoT server");
-                    Aquarium.AquaResponse resp = handle.sendRequest();
+                    Aquarium.MessagePacket resp;
+                    try {
+                        resp = handle.sendRequest(sHost, InetAddress.getLocalHost().getHostName());
+                    } catch (UnknownHostException ex) {
+                        resp = handle.sendRequest(sHost, "unknown-host");
+                    }
                     logger.debug("AquaResponse receive from the IoT server");
-                    if (resp.hasLightingLamp()) {
-                        if (resp.getLightingLamp().getBasic().getStatus() == Aquarium.Condition.Status.ON) {
-                            logger.info("LightingLamp: ON, Duration: {}", resp.getLightingLamp().getBasic().getDuration());
-                            led1.high();
+                    Aquarium.AquaDevice.Condition condition = Condition.getDefaultInstance();
+                    for (int i = 0; i < resp.getDevicesCount(); i++) {
+                        condition = resp.getDevicesList().get(i).getCondition();
+                        if (resp.getDevicesList().get(i).getEquipmentType() == Equipment.LIGHT) {
+
+                            if (condition.getStatus() == Condition.Status.ON) {
+                                logger.info("LightingLamp: ON, Duration: {}", condition.getDuration());
+                                led1.high();
+                            } else {
+                                logger.info("LightingLamp: OFF, Duration: {}", condition.getDuration());
+                                led1.low();
+                            }
+                            break;
+                        }
+                    }
+                    c.close();
+                    try {
+                        if (condition.getDuration() > 0) {
+                            Thread.sleep(condition.getDuration() * WAIT_MINUTE + WAIT_MINUTE);
                         } else {
-                            logger.info("LightingLamp: OFF, Duration: {}", resp.getLightingLamp().getBasic().getDuration());
-                            led1.low();
+                            Thread.sleep(10 * WAIT_MINUTE);
                         }
-                        c.close();
-                        try {
-                            Thread.sleep(resp.getLightingLamp().getBasic().getDuration() * WAIT_MINUTE + WAIT_MINUTE);
-                        } catch (InterruptedException ex) {
-                            logger.error(ex.toString());
-                        }
+                    } catch (InterruptedException ex) {
+                        logger.error(ex.toString());
                     }
                 } catch (InterruptedException ex) {
                     logger.error(ex.toString());
